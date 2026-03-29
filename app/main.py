@@ -20,23 +20,27 @@ from app.notify import send_case_study_email
 
 logger = logging.getLogger("casestudy")
 
-config = AppConfig.load()
+# Resolve all paths relative to project root (parent of app/)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+config = AppConfig.load(PROJECT_ROOT / "config.yaml")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    config.ensure_dirs()
-    db.init_db(config.db_path)
+    config.ensure_dirs(PROJECT_ROOT)
+    db.init_db(config.db_path_resolved(PROJECT_ROOT))
     logger.info("Case Study Collector started")
     yield
 
 
 app = FastAPI(title="Case Study Collector", lifespan=lifespan)
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=str(PROJECT_ROOT / "templates"))
 
-# Serve uploaded screenshots
-uploads_path = Path(config.storage.uploads_dir)
+# Resolve storage paths relative to project root
+db_path = config.db_path_resolved(PROJECT_ROOT)
+uploads_path = PROJECT_ROOT / config.storage.uploads_dir
 uploads_path.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
 
@@ -65,13 +69,13 @@ async def add_brand(
     onboarded_at: str = Form(""),
     notes: str = Form(""),
 ):
-    db.create_brand(config.db_path, name, industry, onboarded_at, notes)
+    db.create_brand(db_path, name, industry, onboarded_at, notes)
     return RedirectResponse("/", status_code=303)
 
 
 @app.post("/brand/{brand_id}/delete")
 async def delete_brand(brand_id: int):
-    db.delete_brand(config.db_path, brand_id)
+    db.delete_brand(db_path, brand_id)
     return RedirectResponse("/", status_code=303)
 
 
@@ -79,16 +83,16 @@ async def delete_brand(brand_id: int):
 
 @app.get("/brand/{brand_id}", response_class=HTMLResponse)
 async def brand_detail(request: Request, brand_id: int):
-    brand = db.get_brand(config.db_path, brand_id)
+    brand = db.get_brand(db_path, brand_id)
     if not brand:
         return RedirectResponse("/", status_code=303)
 
-    snapshots = db.get_snapshots(config.db_path, brand_id)
+    snapshots = db.get_snapshots(db_path, brand_id)
     for snap in snapshots:
-        snap["metrics"] = db.get_metrics(config.db_path, snap["id"])
-        snap["screenshots"] = db.get_screenshots(config.db_path, snap["id"])
+        snap["metrics"] = db.get_metrics(db_path, snap["id"])
+        snap["screenshots"] = db.get_screenshots(db_path, snap["id"])
 
-    entries = db.get_entries(config.db_path, brand_id)
+    entries = db.get_entries(db_path, brand_id)
 
     return templates.TemplateResponse("index.html", {
         "request": request,
@@ -117,14 +121,14 @@ async def add_snapshot(
     # Screenshots
     screenshots: list[UploadFile] = File(default=[]),
 ):
-    snapshot_id = db.create_snapshot(config.db_path, brand_id, label, snapshot_date, notes)
+    snapshot_id = db.create_snapshot(db_path, brand_id, label, snapshot_date, notes)
 
     # Add metrics
     for i in range(len(metric_name)):
         if not metric_name[i].strip():
             continue
         db.add_metric(
-            config.db_path, snapshot_id,
+            db_path, snapshot_id,
             category=metric_category[i] if i < len(metric_category) else "",
             name=metric_name[i],
             value=metric_value[i] if i < len(metric_value) else "",
@@ -142,22 +146,22 @@ async def add_snapshot(
         dest = uploads_path / stored_name
         content = await file.read()
         dest.write_bytes(content)
-        db.add_screenshot(config.db_path, snapshot_id, stored_name, file.filename)
+        db.add_screenshot(db_path, snapshot_id, stored_name, file.filename)
 
     return RedirectResponse(f"/brand/{brand_id}", status_code=303)
 
 
 @app.post("/snapshot/{snapshot_id}/delete")
 async def delete_snapshot(snapshot_id: int):
-    snap = db.get_snapshot(config.db_path, snapshot_id)
+    snap = db.get_snapshot(db_path, snapshot_id)
     if snap:
         # Clean up screenshot files
-        screenshots = db.get_screenshots(config.db_path, snapshot_id)
+        screenshots = db.get_screenshots(db_path, snapshot_id)
         for ss in screenshots:
             fpath = uploads_path / ss["filename"]
             if fpath.exists():
                 fpath.unlink()
-        db.delete_snapshot(config.db_path, snapshot_id)
+        db.delete_snapshot(db_path, snapshot_id)
         return RedirectResponse(f"/brand/{snap['brand_id']}", status_code=303)
     return RedirectResponse("/", status_code=303)
 
@@ -174,13 +178,13 @@ async def add_entry(
 ):
     if not entry_date:
         entry_date = datetime.now().strftime("%Y-%m-%d")
-    db.create_entry(config.db_path, brand_id, category, content, source, entry_date)
+    db.create_entry(db_path, brand_id, category, content, source, entry_date)
     return RedirectResponse(f"/brand/{brand_id}", status_code=303)
 
 
 @app.post("/entry/{entry_id}/delete")
 async def delete_entry(entry_id: int, brand_id: int = Form(...)):
-    db.delete_entry(config.db_path, entry_id)
+    db.delete_entry(db_path, entry_id)
     return RedirectResponse(f"/brand/{brand_id}", status_code=303)
 
 
@@ -188,7 +192,7 @@ async def delete_entry(entry_id: int, brand_id: int = Form(...)):
 
 @app.post("/brand/{brand_id}/case-study")
 async def gen_case_study(request: Request, brand_id: int):
-    brand_data = db.get_brand_full(config.db_path, brand_id)
+    brand_data = db.get_brand_full(db_path, brand_id)
     if not brand_data:
         return RedirectResponse("/", status_code=303)
 
@@ -209,7 +213,7 @@ async def gen_case_study(request: Request, brand_id: int):
 
 @app.post("/brand/{brand_id}/case-study/email")
 async def email_case_study(brand_id: int, case_study: str = Form(...)):
-    brand = db.get_brand(config.db_path, brand_id)
+    brand = db.get_brand(db_path, brand_id)
     if brand:
         send_case_study_email(brand["name"], case_study, config)
     return RedirectResponse(f"/brand/{brand_id}", status_code=303)

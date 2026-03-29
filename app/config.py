@@ -54,10 +54,17 @@ class AppConfig:
     def uploads_path(self) -> Path:
         return Path(self.storage.uploads_dir)
 
-    def ensure_dirs(self) -> None:
+    def db_path_resolved(self, root: Path | None = None) -> Path:
+        """Resolve DB path relative to a root directory."""
+        if root:
+            return root / self.storage.db_path
+        return Path(self.storage.db_path)
+
+    def ensure_dirs(self, root: Path | None = None) -> None:
         """Create data and upload directories if they don't exist."""
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.uploads_path.mkdir(parents=True, exist_ok=True)
+        base = root or Path(".")
+        (base / self.storage.db_path).parent.mkdir(parents=True, exist_ok=True)
+        (base / self.storage.uploads_dir).mkdir(parents=True, exist_ok=True)
 
     @classmethod
     def load(cls, path: str | Path = "config.yaml") -> "AppConfig":
