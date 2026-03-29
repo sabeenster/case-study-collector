@@ -54,7 +54,7 @@ async def health():
 
 @app.get("/", response_class=HTMLResponse)
 async def brand_list(request: Request):
-    brands = db.get_brands(config.db_path)
+    brands = db.get_brands(db_path)
     return templates.TemplateResponse("index.html", {
         "request": request,
         "page": "brands",
