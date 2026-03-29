@@ -50,50 +50,16 @@ async def health():
     return {"status": "ok"}
 
 
-@app.get("/debug")
-async def debug():
-    """Temporary debug endpoint — remove after deployment is stable."""
-    import traceback
-    info = {
-        "project_root": str(PROJECT_ROOT),
-        "db_path": str(db_path),
-        "db_exists": db_path.exists(),
-        "templates_dir": str(PROJECT_ROOT / "templates"),
-        "templates_exists": (PROJECT_ROOT / "templates").exists(),
-        "uploads_dir": str(uploads_path),
-        "uploads_exists": uploads_path.exists(),
-    }
-    # Try to actually run the brand list logic
-    try:
-        brands = db.get_brands(db_path)
-        info["brands_count"] = len(brands)
-        info["brands_ok"] = True
-    except Exception as e:
-        info["brands_error"] = f"{type(e).__name__}: {e}"
-        info["brands_traceback"] = traceback.format_exc()
-    # Try to render template
-    try:
-        from starlette.testclient import TestClient
-        info["template_index_exists"] = (PROJECT_ROOT / "templates" / "index.html").exists()
-    except Exception as e:
-        info["template_error"] = str(e)
-    return JSONResponse(info)
-
 
 # --- Brand List ---
 
 @app.get("/", response_class=HTMLResponse)
 async def brand_list(request: Request):
-    import traceback
-    try:
-        brands = db.get_brands(db_path)
-        return templates.TemplateResponse("index.html", {
-            "request": request,
-            "page": "brands",
-            "brands": brands,
-        })
-    except Exception as e:
-        return HTMLResponse(f"<pre>{traceback.format_exc()}</pre>", status_code=500)
+    brands = db.get_brands(db_path)
+    return templates.TemplateResponse(request, "index.html", {
+        "page": "brands",
+        "brands": brands,
+    })
 
 
 @app.post("/brand/add")
@@ -128,8 +94,7 @@ async def brand_detail(request: Request, brand_id: int):
 
     entries = db.get_entries(db_path, brand_id)
 
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "page": "brand_detail",
         "brand": brand,
         "snapshots": snapshots,
@@ -235,8 +200,7 @@ async def gen_case_study(request: Request, brand_id: int):
     snapshots = brand_data.get("snapshots", [])
     entries = brand_data.get("entries", [])
 
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "page": "case_study",
         "brand": brand_data,
         "snapshots": snapshots,
