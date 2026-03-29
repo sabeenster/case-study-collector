@@ -84,12 +84,16 @@ async def debug():
 
 @app.get("/", response_class=HTMLResponse)
 async def brand_list(request: Request):
-    brands = db.get_brands(db_path)
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "page": "brands",
-        "brands": brands,
-    })
+    import traceback
+    try:
+        brands = db.get_brands(db_path)
+        return templates.TemplateResponse("index.html", {
+            "request": request,
+            "page": "brands",
+            "brands": brands,
+        })
+    except Exception as e:
+        return HTMLResponse(f"<pre>{traceback.format_exc()}</pre>", status_code=500)
 
 
 @app.post("/brand/add")
