@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Study Collector — Agentway</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f14;
+            color: #e4e4e7;
+            min-height: 100vh;
+        }
+        a { color: #818cf8; text-decoration: none; }
+        a:hover { color: #a5b4fc; }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #6366f1, #4338ca);
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 { color: white; font-size: 20px; font-weight: 600; }
+        .header .subtitle { color: #c7d2fe; font-size: 13px; }
+        .header a { color: white; }
+
+        /* Layout */
+        .container { max-width: 1000px; margin: 0 auto; padding: 24px; }
+
+        /* Cards */
+        .card {
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card h2 { font-size: 18px; margin-bottom: 12px; color: #f4f4f5; }
+        .card h3 { font-size: 15px; margin-bottom: 8px; color: #a5b4fc; }
+
+        /* Forms */
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; color: #a1a1aa; margin-bottom: 4px; }
+        input[type="text"], input[type="date"], textarea, select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f0f14;
+            border: 1px solid #2a2a3a;
+            border-radius: 6px;
+            color: #e4e4e7;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        textarea { min-height: 80px; resize: vertical; }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-primary { background: #6366f1; color: white; }
+        .btn-primary:hover { background: #5558e6; }
+        .btn-secondary { background: #2a2a3a; color: #e4e4e7; }
+        .btn-secondary:hover { background: #3a3a4a; }
+        .btn-danger { background: #7f1d1d; color: #fca5a5; font-size: 12px; padding: 4px 10px; }
+        .btn-danger:hover { background: #991b1b; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn-green { background: #065f46; color: #6ee7b7; }
+        .btn-green:hover { background: #047857; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 8px; color: #a1a1aa; font-weight: 500; border-bottom: 1px solid #2a2a3a; }
+        td { padding: 8px; border-bottom: 1px solid #1a1a24; }
+
+        /* Brand list */
+        .brand-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+        }
+        .brand-card .brand-info h3 { color: #f4f4f5; font-size: 16px; margin-bottom: 4px; }
+        .brand-card .brand-meta { font-size: 13px; color: #71717a; }
+
+        /* Snapshot timeline */
+        .snapshot {
+            border-left: 3px solid #6366f1;
+            padding-left: 20px;
+            margin-left: 8px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .snapshot::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 0;
+            width: 11px;
+            height: 11px;
+            background: #6366f1;
+            border-radius: 50%;
+        }
+        .snapshot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .snapshot-label { font-weight: 600; color: #f4f4f5; }
+        .snapshot-date { font-size: 13px; color: #71717a; }
+
+        /* Metrics grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .metric-card {
+            background: #0f0f14;
+            border: 1px solid #2a2a3a;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .metric-name { font-size: 12px; color: #a1a1aa; }
+        .metric-value { font-size: 18px; font-weight: 600; color: #f4f4f5; }
+        .metric-change { font-size: 11px; }
+        .metric-change.positive { color: #6ee7b7; }
+        .metric-change.negative { color: #fca5a5; }
+
+        /* Screenshots */
+        .screenshots { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+        .screenshots img {
+            max-height: 120px;
+            border-radius: 6px;
+            border: 1px solid #2a2a3a;
+            cursor: pointer;
+        }
+        .screenshots img:hover { border-color: #6366f1; }
+
+        /* Entries */
+        .entry {
+            padding: 10px 14px;
+            background: #0f0f14;
+            border: 1px solid #2a2a3a;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .entry-category {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #2a2a3a;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #a5b4fc;
+            margin-bottom: 4px;
+        }
+        .entry-content { font-size: 14px; line-height: 1.6; }
+        .entry-meta { font-size: 12px; color: #71717a; margin-top: 4px; }
+
+        /* Dynamic metric rows */
+        .metric-row {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr 0.7fr 0.8fr 1fr auto;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: end;
+        }
+        .metric-row input { padding: 6px 8px; font-size: 13px; }
+        .metric-row label { font-size: 11px; color: #71717a; }
+
+        /* Case study output */
+        .case-study-output {
+            background: #0f0f14;
+            border: 1px solid #2a2a3a;
+            border-radius: 8px;
+            padding: 24px;
+            font-size: 15px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        /* Guide section */
+        .guide {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .guide h3 { color: #a5b4fc; font-size: 14px; margin-bottom: 8px; }
+        .guide ul { padding-left: 20px; font-size: 13px; color: #a1a1aa; line-height: 1.8; }
+        .guide-toggle { cursor: pointer; user-select: none; }
+        .guide-content { display: none; }
+        .guide-content.open { display: block; }
+
+        /* Utility */
+        .flex { display: flex; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .mt-2 { margin-top: 8px; }
+        .mt-3 { margin-top: 12px; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-3 { margin-bottom: 12px; }
+        .text-muted { color: #71717a; font-size: 13px; }
+
+        /* Image modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            cursor: pointer;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-overlay img { max-width: 90vw; max-height: 90vh; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1><a href="/">Case Study Collector</a></h1>
+            <div class="subtitle">Powered by Agentway</div>
+        </div>
+        {% if page == "brand_detail" or page == "case_study" %}
+        <a href="/" class="btn btn-secondary btn-sm">&larr; All Brands</a>
+        {% endif %}
+    </div>
+
+    <div class="container">
+
+    {% if page == "brands" %}
+    <!-- ===== BRANDS LIST ===== -->
+    <div class="flex" style="justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 20px;">Brands</h2>
+        <button class="btn btn-primary btn-sm" onclick="toggleForm('add-brand-form')">+ Add Brand</button>
+    </div>
+
+    <!-- Add Brand Form (hidden) -->
+    <div id="add-brand-form" class="card" style="display:none;">
+        <h3>Add New Brand</h3>
+        <form action="/brand/add" method="POST">
+            <div class="form-group">
+                <label>Brand Name *</label>
+                <input type="text" name="name" required placeholder="e.g., Dippin' Daisy's">
+            </div>
+            <div class="flex gap-2">
+                <div class="form-group" style="flex:1">
+                    <label>Industry</label>
+                    <input type="text" name="industry" placeholder="e.g., E-commerce, Fashion, Beauty">
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label>Onboarded Date</label>
+                    <input type="date" name="onboarded_at">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes (team size, tools, current setup)</label>
+                <textarea name="notes" placeholder="e.g., 2 support agents in Philippines, using Redo for support, ~1600 tickets/month"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Brand</button>
+        </form>
+    </div>
+
+    <!-- Collection Guide -->
+    <div class="guide">
+        <h3 class="guide-toggle" onclick="toggleGuide()">
+            📋 What to Collect for Case Studies <span id="guide-arrow">▸</span>
+        </h3>
+        <div id="guide-content" class="guide-content">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+                <div>
+                    <strong style="color:#6ee7b7;">Onboarding (Baseline)</strong>
+                    <ul>
+                        <li>What does the brand sell? Size? Support volume?</li>
+                        <li>How many support agents? Where? Cost?</li>
+                        <li>What's broken? What are they spending too much on?</li>
+                        <li>Current CSAT, resolution time, first response time</li>
+                        <li>What platforms? (Redo, Gorgias, Zendesk)</li>
+                        <li>What does success look like for them?</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong style="color:#fbbf24;">During Deployment (Weeks 1-4)</strong>
+                    <ul>
+                        <li>What changed when AI agents went live?</li>
+                        <li>How did existing staff respond?</li>
+                        <li>Any immediate wins?</li>
+                        <li>What needed tuning?</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong style="color:#818cf8;">Ongoing (Monthly)</strong>
+                    <ul>
+                        <li>Same metrics as baseline for comparison</li>
+                        <li>Anything the brand owner/team said that's quotable</li>
+                        <li>Things you notice about how they use the system</li>
+                        <li>Headcount changes, time saved, cost savings</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong style="color:#f472b6;">Results (Case Study Ready)</strong>
+                    <ul>
+                        <li>Before/after metric comparison</li>
+                        <li>ROI: cost savings vs. Agentway investment</li>
+                        <li>Direct customer testimonial quote</li>
+                        <li>Unexpected benefits they didn't expect</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if brands %}
+    {% for brand in brands %}
+    <div class="card brand-card">
+        <div class="brand-info">
+            <h3><a href="/brand/{{ brand.id }}">{{ brand.name }}</a></h3>
+            <div class="brand-meta">
+                {% if brand.industry %}{{ brand.industry }} · {% endif %}
+                {{ brand.snapshot_count }} snapshot{{ 's' if brand.snapshot_count != 1 else '' }}
+                {% if brand.last_snapshot %} · Last: {{ brand.last_snapshot }}{% endif %}
+                {% if brand.onboarded_at %} · Onboarded: {{ brand.onboarded_at }}{% endif %}
+            </div>
+        </div>
+        <form action="/brand/{{ brand.id }}/delete" method="POST" onsubmit="return confirm('Delete {{ brand.name }} and all its data?')">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="card" style="text-align:center; padding: 40px; color: #71717a;">
+        No brands yet. Add your first brand to start collecting case study data.
+    </div>
+    {% endif %}
+
+    {% elif page == "brand_detail" or page == "case_study" %}
+    <!-- ===== BRAND DETAIL ===== -->
+    <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 22px;">{{ brand.name }}</h2>
+        <div class="text-muted">
+            {% if brand.industry %}{{ brand.industry }} · {% endif %}
+            {% if brand.onboarded_at %}Onboarded: {{ brand.onboarded_at }} · {% endif %}
+            {{ snapshots|length }} snapshot{{ 's' if snapshots|length != 1 else '' }}
+        </div>
+        {% if brand.notes %}
+        <div style="margin-top: 8px; font-size: 14px; color: #a1a1aa;">{{ brand.notes }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex gap-2 mb-3">
+        <button class="btn btn-primary btn-sm" onclick="toggleForm('add-snapshot-form')">+ Add Snapshot</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleForm('add-entry-form')">+ Add Text Entry</button>
+        <form action="/brand/{{ brand.id }}/case-study" method="POST" style="display:inline;">
+            <button type="submit" class="btn btn-green btn-sm">Generate Case Study</button>
+        </form>
+    </div>
+
+    {% if page == "case_study" and case_study %}
+    <!-- Case Study Output -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h2>Generated Case Study</h2>
+            <div class="flex gap-2">
+                <button class="btn btn-secondary btn-sm" onclick="copyText()">Copy</button>
+                <form action="/brand/{{ brand.id }}/case-study/email" method="POST" style="display:inline;">
+                    <input type="hidden" name="case_study" value="{{ case_study|e }}">
+                    <button type="submit" class="btn btn-primary btn-sm">Email Draft</button>
+                </form>
+            </div>
+        </div>
+        <div class="case-study-output" id="case-study-text">{{ case_study }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Add Snapshot Form (hidden) -->
+    <div id="add-snapshot-form" class="card" style="display:none;">
+        <h3>Add Metrics Snapshot</h3>
+        <form action="/brand/{{ brand.id }}/snapshot/add" method="POST" enctype="multipart/form-data">
+            <div class="flex gap-2">
+                <div class="form-group" style="flex:1">
+                    <label>Label *</label>
+                    <input type="text" name="label" required placeholder="e.g., Baseline, Week 4, Month 3">
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label>Date *</label>
+                    <input type="date" name="snapshot_date" required value="{{ today }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea name="notes" rows="2" placeholder="Context about this snapshot..."></textarea>
+            </div>
+
+            <!-- Metric template buttons -->
+            <div class="mb-2">
+                <label style="font-size: 13px; color: #a1a1aa; display: block; margin-bottom: 6px;">Quick-add metric templates:</label>
+                <div class="flex gap-2" style="flex-wrap: wrap;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addCSATMetrics()">CSAT Metrics</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addTouchCountMetrics()">Touch Count</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addResolutionMetrics()">Resolution Time</button>
+                </div>
+            </div>
+
+            <!-- Dynamic metric rows -->
+            <div id="metrics-container">
+                <div class="metric-row" style="margin-bottom: 2px;">
+                    <label>Category</label>
+                    <label>Metric Name</label>
+                    <label>Value</label>
+                    <label>Unit</label>
+                    <label>Change %</label>
+                    <label>vs Period</label>
+                    <label></label>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addMetricRow()">+ Add Metric</button>
+
+            <!-- Screenshots -->
+            <div class="form-group mt-3">
+                <label>Screenshots</label>
+                <input type="file" name="screenshots" multiple accept="image/*"
+                    style="padding: 8px; background: #0f0f14; border: 1px solid #2a2a3a; border-radius: 6px; width: 100%; color: #e4e4e7;">
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-2">Save Snapshot</button>
+        </form>
+    </div>
+
+    <!-- Add Text Entry Form (hidden) -->
+    <div id="add-entry-form" class="card" style="display:none;">
+        <h3>Add Text Entry</h3>
+        <p class="text-muted mb-2">Capture observations, quotes, context, or anything relevant to the case study.</p>
+        <form action="/brand/{{ brand.id }}/entry/add" method="POST">
+            <div class="flex gap-2">
+                <div class="form-group" style="flex:1">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="">— Select —</option>
+                        <option value="Challenge">Challenge / Pain Point</option>
+                        <option value="Quote">Quote / Testimonial</option>
+                        <option value="Observation">Observation</option>
+                        <option value="Result">Result / Win</option>
+                        <option value="Context">Brand Context</option>
+                        <option value="Cost">Cost / ROI Data</option>
+                        <option value="Team">Team / Staffing</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label>Source (optional)</label>
+                    <input type="text" name="source" placeholder="e.g., Brand owner, Slack, call notes">
+                </div>
+                <div class="form-group" style="width: 150px;">
+                    <label>Date</label>
+                    <input type="date" name="entry_date">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Content *</label>
+                <textarea name="content" required rows="3" placeholder="What did you learn, hear, or observe?"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Entry</button>
+        </form>
+    </div>
+
+    <!-- Text Entries -->
+    {% if entries %}
+    <div class="card">
+        <h3>Text Entries & Observations</h3>
+        {% for entry in entries %}
+        <div class="entry">
+            {% if entry.category %}
+            <span class="entry-category">{{ entry.category }}</span>
+            {% endif %}
+            <div class="entry-content">{{ entry.content }}</div>
+            <div class="entry-meta">
+                {{ entry.entry_date }}
+                {% if entry.source %} · {{ entry.source }}{% endif %}
+                <form action="/entry/{{ entry.id }}/delete" method="POST" style="display:inline; margin-left: 8px;">
+                    <input type="hidden" name="brand_id" value="{{ brand.id }}">
+                    <button type="submit" class="btn btn-danger btn-sm" style="font-size:11px; padding:2px 6px;">x</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Snapshot Timeline -->
+    {% if snapshots %}
+    <div class="card">
+        <h3>Metrics Timeline</h3>
+        <div style="margin-top: 16px;">
+        {% for snap in snapshots %}
+        <div class="snapshot">
+            <div class="snapshot-header">
+                <div>
+                    <span class="snapshot-label">{{ snap.label }}</span>
+                    <span class="snapshot-date">{{ snap.snapshot_date }}</span>
+                </div>
+                <form action="/snapshot/{{ snap.id }}/delete" method="POST" onsubmit="return confirm('Delete this snapshot?')">
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            </div>
+            {% if snap.notes %}
+            <div class="text-muted mb-2">{{ snap.notes }}</div>
+            {% endif %}
+
+            {% if snap.metrics %}
+            <div class="metrics-grid">
+                {% for m in snap.metrics %}
+                <div class="metric-card">
+                    <div class="metric-name">{{ m.category }}{% if m.category %} · {% endif %}{{ m.name }}</div>
+                    <div class="metric-value">{{ m.value }}{% if m.unit %} {{ m.unit }}{% endif %}</div>
+                    {% if m.change_pct %}
+                    <div class="metric-change {% if '-' in m.change_pct %}negative{% else %}positive{% endif %}">
+                        {{ m.change_pct }}{% if m.change_vs %} vs {{ m.change_vs }}{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if snap.screenshots %}
+            <div class="screenshots">
+                {% for ss in snap.screenshots %}
+                <img src="/uploads/{{ ss.filename }}" alt="{{ ss.original_name }}" title="{{ ss.caption or ss.original_name }}" onclick="openModal(this.src)">
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% endif %}
+
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal-overlay" id="image-modal" onclick="closeModal()">
+        <img id="modal-image" src="" alt="">
+    </div>
+
+    <script>
+    function toggleForm(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleGuide() {
+        const content = document.getElementById('guide-content');
+        const arrow = document.getElementById('guide-arrow');
+        content.classList.toggle('open');
+        arrow.textContent = content.classList.contains('open') ? '▾' : '▸';
+    }
+
+    function addMetricRow(category='', name='', value='', unit='', changePct='', changeVs='') {
+        const container = document.getElementById('metrics-container');
+        const row = document.createElement('div');
+        row.className = 'metric-row';
+        row.innerHTML = `
+            <input type="text" name="metric_category" value="${category}" placeholder="CSAT">
+            <input type="text" name="metric_name" value="${name}" placeholder="Metric name" required>
+            <input type="text" name="metric_value" value="${value}" placeholder="3.727">
+            <input type="text" name="metric_unit" value="${unit}" placeholder="/5">
+            <input type="text" name="metric_change_pct" value="${changePct}" placeholder="-2.04%">
+            <input type="text" name="metric_change_vs" value="${changeVs}" placeholder="previous period">
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">x</button>
+        `;
+        container.appendChild(row);
+    }
+
+    function addCSATMetrics() {
+        addMetricRow('CSAT', 'CSAT Score', '', '/5');
+        addMetricRow('CSAT', 'CSAT Surveys Sent', '', '');
+        addMetricRow('CSAT', 'CSAT Response Rate', '', '%');
+        addMetricRow('CSAT', 'AI CSAT Score', '', '/5');
+        addMetricRow('CSAT', 'Human CSAT Score', '', '/5');
+    }
+
+    function addTouchCountMetrics() {
+        addMetricRow('Touch Count', 'One Touch Resolved', '', '');
+        addMetricRow('Touch Count', 'Two Touch Resolved', '', '');
+        addMetricRow('Touch Count', 'Three Touch Resolved', '', '');
+        addMetricRow('Touch Count', 'Multi Touch (4+)', '', '');
+        addMetricRow('Touch Count', 'Avg Conversation Touches', '', '');
+    }
+
+    function addResolutionMetrics() {
+        addMetricRow('Resolution', 'AI Median Resolution Time', '', 'seconds');
+        addMetricRow('Resolution', 'Human Median Resolution Time', '', 'hours');
+    }
+
+    function openModal(src) {
+        document.getElementById('modal-image').src = src;
+        document.getElementById('image-modal').classList.add('open');
+    }
+
+    function closeModal() {
+        document.getElementById('image-modal').classList.remove('open');
+    }
+
+    function copyText() {
+        const text = document.getElementById('case-study-text').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = event.target;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        });
+    }
+
+    // Set today's date as default
+    document.querySelectorAll('input[type="date"]').forEach(el => {
+        if (!el.value) el.value = new Date().toISOString().split('T')[0];
+    });
+    </script>
+</body>
+</html>
