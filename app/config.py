@@ -14,7 +14,7 @@ load_dotenv()
 
 @dataclass
 class GenerationConfig:
-    model: str = "claude-sonnet-4-20250514"
+    model: str = "claude-opus-4-6"
     max_tokens: int = 4000
 
 
